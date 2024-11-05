@@ -1,3 +1,3 @@
-# JeanCeugniet-FlightBooking-API
+# JeanCeugniet-TotalRecall-API
 
 ## Test
