@@ -1,0 +1,162 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URI")
+}
+
+enum Role {
+    CLIENTUSER
+    COMPANYUSER
+    ADMIN
+}
+
+model User {
+    @@map("users")
+    userId String @id @default(auto()) @map("_id") @db.ObjectId
+    userEmail String
+    userPasswordHash String
+    userRole    Role
+    userLastLogin DateTime?
+    userToken String?
+    userTokenValidity DateTime?
+    userCreatedAt  DateTime @default(now())
+    userUpdatedAt DateTime @updatedAt
+}
+
+model Company {
+    @@map("companies")
+    companyId String @id @default(auto()) @map("_id") @db.ObjectId
+    companyIATACode String @unique
+    companyName String
+    companyCreatedAt  DateTime @default(now())
+    companyUpdatedAt DateTime @updatedAt
+    companyFlights Flight[] @relation("flightCompany")
+}
+
+model Country {
+    @@map("countries")
+    countryId String @id @default(auto()) @map("_id") @db.ObjectId
+    countryName String
+    countryCreatedAt  DateTime @default(now())
+    countryUpdatedAt DateTime @updatedAt
+    countryCities City[] @relation("cityCountry")
+    countryPassengers Passenger[] @relation("passengerNationalCountry")
+}
+
+model City {
+    @@map("cities")
+    cityId String @id @default(auto()) @map("_id") @db.ObjectId
+    cityName String
+    cityCountryId String @db.ObjectId
+    cityCountry Country @relation(name: "cityCountry", fields: [cityCountryId], references: [countryId])
+    cityGMTOffset   Int @default(0)
+    cityCreatedAt  DateTime @default(now())
+    cityUpdatedAt DateTime @updatedAt
+    cityAirports Airport[] @relation("airportCity")
+    cityClients Client[] @relation("clientCity")
+}
+
+model Airport {
+    @@map("airports")
+    airportId String @id @default(auto()) @map("_id") @db.ObjectId
+    airportIATACode String @unique
+    airportCityId String @db.ObjectId
+    airportCity City @relation(name: "airportCity", fields: [airportCityId], references: [cityId])
+    airportName String
+    airportCreatedAt  DateTime @default(now())
+    airportUpdatedAt DateTime @updatedAt
+    airportFlightsDepartingFrom Flight[] @relation("flightDeparture")
+    airportFlightsArrivingTo Flight[] @relation("flightArrival")
+    airportStopovers Stopover[] @relation("stopoverAirport")
+}
+
+model Client {
+    @@map("clients")
+    clientId String @id @default(auto()) @map("_id") @db.ObjectId
+    clientEmail String @unique
+    clientFirstname String
+    clientLastname String
+    clientAddress String
+    clientCityId String @db.ObjectId
+    clientCity City @relation(name: "clientCity", fields: [clientCityId], references: [cityId])
+    clientCreatedAt  DateTime @default(now())
+    clientUpdatedAt DateTime @updatedAt
+    clientBuyers Buyer[] @relation("buyerClient")
+    clientPassengers Passenger[] @relation("passengerClient")
+}
+
+model Buyer {
+    @@map("buyers")
+    buyerId String @id @default(auto()) @map("_id") @db.ObjectId
+    buyerClientId String @db.ObjectId
+    buyerClient Client @relation(name: "buyerClient", fields: [buyerClientId], references: [clientId])
+    buyerTransactionHistory String?
+    buyerCreatedAt  DateTime @default(now())
+    buyerUpdatedAt DateTime @updatedAt
+    buyerBookings Booking[] @relation("bookingBuyer")
+}
+
+model Passenger {
+    @@map("passengers")
+    passengerId String @id @default(auto()) @map("_id") @db.ObjectId
+    passengerClientId String @db.ObjectId
+    passengerClient Client @relation(name: "passengerClient", fields: [passengerClientId], references: [clientId])
+    passengerNationalCountryId String @db.ObjectId
+    passengerNationalCountry Country @relation(name: "passengerNationalCountry", fields: [passengerNationalCountryId], references: [countryId])
+    passengerDisability String?
+    passengerSpecifics String?
+    passengerCreatedAt  DateTime @default(now())
+    passengerUpdatedAt DateTime @updatedAt
+    passengerBookings Booking[] @relation("bookingPassenger")
+}
+
+model Flight {
+    @@map("flights")
+    flightId String @id @default(auto()) @map("_id") @db.ObjectId
+    flightCompanyId String @db.ObjectId
+    flightCompany Company @relation(name: "flightCompany", fields: [flightCompanyId], references: [companyId])
+    flightIATACode String
+    flightDepartureAirportId String @db.ObjectId
+    flightDepartureAirport Airport @relation(name: "flightDeparture", fields: [flightDepartureAirportId], references: [airportId])
+    flightArrivalAirportId String @db.ObjectId
+    flightArrivalAirport Airport @relation(name: "flightArrival", fields: [flightArrivalAirportId], references: [airportId])
+    flightProjectedDeparture DateTime
+    flightProjectedArrival DateTime
+    flightRealDeparture DateTime?
+    flightRealArrival DateTime?
+    flightCanBeBooked Boolean @default(false)
+    flightCreatedAt  DateTime @default(now())
+    flightUpdatedAt DateTime @updatedAt
+    flightStopovers Stopover[] @relation("stopoverFlight")
+}
+
+model Stopover {
+    @@map("stopovers")
+    stopoverId String @id @default(auto()) @map("_id") @db.ObjectId
+    stopoverFlightId String @db.ObjectId
+    stopoverFlight Flight @relation(name: "stopoverFlight", fields: [stopoverFlightId], references: [flightId])
+    stopoverAirportId String @db.ObjectId
+    stopoverAirport Airport @relation(name: "stopoverAirport", fields: [stopoverAirportId], references: [airportId])
+    stopoverRank Int @default(1)
+    stoppoverProjectedArrival DateTime
+    stopoverProjectedDeparture DateTime
+    stopoverRealArrival DateTime?
+    stopoverRealDeparture DateTime?
+    stopoverCreatedAt  DateTime @default(now())
+    stopoverUpdatedAt DateTime @updatedAt
+}
+
+model Booking {
+    @@map("bookings")
+    bookingId String @id @default(auto()) @map("_id") @db.ObjectId
+    bookingBuyerId String @db.ObjectId
+    bookingBuyer Buyer @relation(name: "bookingBuyer", fields: [bookingBuyerId], references: [buyerId])
+    bookingPassengerId String @db.ObjectId
+    bookingPassenger Passenger @relation(name: "bookingPassenger", fields: [bookingPassengerId], references: [passengerId])
+    bookingSeat String
+    bookingCreatedAt  DateTime @default(now())
+    bookingUpdatedAt DateTime @updatedAt
+}

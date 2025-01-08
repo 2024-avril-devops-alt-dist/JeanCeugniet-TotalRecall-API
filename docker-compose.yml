@@ -1,0 +1,34 @@
+#### TotalRecall ###
+services:
+  nextjs: #### NextJS et Prisma ###
+    image: node:18-alpine
+    container_name: nextjs
+    working_dir: /app
+    volumes:
+      - ./:/app
+      #- /app/node_modules
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5555:5555"
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=development
+    depends_on:
+      - mongo
+    command: ["sh", "-c", "npx next dev & npx prisma studio", "npx prisma generate", "npm run dev"]
+
+  mongo:  #### MongoDB ###
+    image: mongo:5
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db 
+      - ./mongo_backup:/data/ ## Pour sauvegarder les données dans le répertoire mongo_backup
+    command: --replSet rs0
+
+volumes:
+  mongo-data:

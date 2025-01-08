@@ -1,0 +1,36 @@
+import mongoose from "mongoose"
+
+const DATABASE_URI = process.env.DATABASE_URI;
+
+const dbConnect = async () => {
+    console.log("Conecting to Mongo...");
+
+    const dbConnectionState = mongoose.connection.readyState;
+
+
+
+    if(dbConnectionState === 1) {
+        console.log("Already connected");
+        return;
+    }
+
+    if(dbConnectionState === 2) {
+        console.log("Connecting...");
+        return;
+    }
+
+    try {
+        mongoose.connect(DATABASE_URI!, {
+            bufferCommands: true
+        });
+        console.log("connected");
+
+    }
+    catch(err: any) {
+        console.log("Error : ", err);
+        throw new Error("Error DB connection", err);
+
+    }
+}
+
+export default dbConnect;
