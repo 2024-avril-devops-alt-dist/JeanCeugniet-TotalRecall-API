@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-const collection = "companyUser";
-const response = "companyUsers";
-const collectionId = "companyUserId"
+const collection = "passenger";
+const response = "passenger";
+const collectionId = "passengerId"
 
-
-export const GET = async () => {
+export const GET = async (req: NextRequest, { params }: { params: { id: string }}) => {
+    const { id } = params;
     try {
-        const data = await prisma[collection].findMany({
+        const data = await prisma[collection].findUnique({
+            where: { [collectionId]: id },
             include: {
-                companyUserCompany: true,
-                companyUserUser: true
+                passengerClient: true,
+                passengerNationalCountry: true
             }
         });
         return NextResponse.json({ [response]: data ?? [] });

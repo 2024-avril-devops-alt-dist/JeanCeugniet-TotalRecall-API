@@ -8,10 +8,12 @@ const collectionId = "clientId"
 
 
 export const GET = async () => {
-    console.log("GET >>")
     try {
-        const data = await prisma[collection].findMany();
-        console.log('------------clients : ', data)
+        const data = await prisma[collection].findMany({
+            include: {
+                clientUser: true
+            }
+        });
         return NextResponse.json({ [response]: data ?? [] });
     }
     catch (error) {
@@ -20,6 +22,5 @@ export const GET = async () => {
             { status: 500 }
         );
     }
-    console.log("<< GET")
 }
 

@@ -8,7 +8,12 @@ const collectionId = "countryId"
 
 export const GET = async () => {
     try {
-        const data = await prisma[collection].findMany();
+        const data = await prisma[collection].findMany({
+            include: {
+                countryCities: true
+            }
+
+        });
         return NextResponse.json({ [response]: data ?? [] });
     }
     catch (error) {
