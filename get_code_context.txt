@@ -1,11 +1,11 @@
+// File: prisma/schema.prisma
 generator client {
     provider = "prisma-client-js"
-    previewFeatures = ["relationJoins"]
 }
 
 datasource db {
     provider = "mongodb"
-    url      = env("DATABASE_URL")
+    url      = env("DATABASE_URI")
 }
 
 enum Role {
@@ -25,17 +25,6 @@ model User {
     userTokenValidity DateTime?
     userCreatedAt  DateTime @default(now())
     userUpdatedAt DateTime @updatedAt
-    userCompanyUsers CompanyUser[] @relation("companyUserUser")
-    userClients Client[] @relation("clientUser")
-}
-
-model CompanyUser {
-    @@map("companyUsers")
-    companyUserId String @id @default(auto()) @map("_id") @db.ObjectId
-    companyUserUserId String @db.ObjectId
-    companyUserUser User @relation(name: "companyUserUser", fields: [companyUserUserId], references: [userId], onDelete: Cascade)
-    companyUserCompanyId String @db.ObjectId
-    companyUserCompany Company @relation(name: "companyUserCompany", fields: [companyUserCompanyId], references: [companyId], onDelete: Cascade)
 }
 
 model Company {
@@ -46,7 +35,6 @@ model Company {
     companyCreatedAt  DateTime @default(now())
     companyUpdatedAt DateTime @updatedAt
     companyFlights Flight[] @relation("flightCompany")
-    companyCompanyUsers CompanyUser[] @relation("companyUserCompany")
 }
 
 model Country {
@@ -64,7 +52,7 @@ model City {
     cityId String @id @default(auto()) @map("_id") @db.ObjectId
     cityName String
     cityCountryId String @db.ObjectId
-    cityCountry Country @relation(name: "cityCountry", fields: [cityCountryId], references: [countryId], onDelete: Cascade)
+    cityCountry Country @relation(name: "cityCountry", fields: [cityCountryId], references: [countryId])
     cityGMTOffset   Int @default(0)
     cityCreatedAt  DateTime @default(now())
     cityUpdatedAt DateTime @updatedAt
@@ -77,7 +65,7 @@ model Airport {
     airportId String @id @default(auto()) @map("_id") @db.ObjectId
     airportIATACode String @unique
     airportCityId String @db.ObjectId
-    airportCity City @relation(name: "airportCity", fields: [airportCityId], references: [cityId], onDelete: Cascade)
+    airportCity City @relation(name: "airportCity", fields: [airportCityId], references: [cityId])
     airportName String
     airportCreatedAt  DateTime @default(now())
     airportUpdatedAt DateTime @updatedAt
@@ -89,13 +77,12 @@ model Airport {
 model Client {
     @@map("clients")
     clientId String @id @default(auto()) @map("_id") @db.ObjectId
-    clientUserId String @db.ObjectId
-    clientUser User @relation(name: "clientUser", fields: [clientUserId], references: [userId], onDelete: Cascade)
+    clientEmail String @unique
     clientFirstname String
     clientLastname String
     clientAddress String
     clientCityId String @db.ObjectId
-    clientCity City @relation(name: "clientCity", fields: [clientCityId], references: [cityId], onDelete: Cascade)
+    clientCity City @relation(name: "clientCity", fields: [clientCityId], references: [cityId])
     clientCreatedAt  DateTime @default(now())
     clientUpdatedAt DateTime @updatedAt
     clientBuyers Buyer[] @relation("buyerClient")
@@ -106,7 +93,7 @@ model Buyer {
     @@map("buyers")
     buyerId String @id @default(auto()) @map("_id") @db.ObjectId
     buyerClientId String @db.ObjectId
-    buyerClient Client @relation(name: "buyerClient", fields: [buyerClientId], references: [clientId], onDelete: Cascade)
+    buyerClient Client @relation(name: "buyerClient", fields: [buyerClientId], references: [clientId])
     buyerTransactionHistory String?
     buyerCreatedAt  DateTime @default(now())
     buyerUpdatedAt DateTime @updatedAt
@@ -117,9 +104,9 @@ model Passenger {
     @@map("passengers")
     passengerId String @id @default(auto()) @map("_id") @db.ObjectId
     passengerClientId String @db.ObjectId
-    passengerClient Client @relation(name: "passengerClient", fields: [passengerClientId], references: [clientId], onDelete: Cascade)
+    passengerClient Client @relation(name: "passengerClient", fields: [passengerClientId], references: [clientId])
     passengerNationalCountryId String @db.ObjectId
-    passengerNationalCountry Country @relation(name: "passengerNationalCountry", fields: [passengerNationalCountryId], references: [countryId], onDelete: Cascade)
+    passengerNationalCountry Country @relation(name: "passengerNationalCountry", fields: [passengerNationalCountryId], references: [countryId])
     passengerDisability String?
     passengerSpecifics String?
     passengerCreatedAt  DateTime @default(now())
@@ -131,12 +118,12 @@ model Flight {
     @@map("flights")
     flightId String @id @default(auto()) @map("_id") @db.ObjectId
     flightCompanyId String @db.ObjectId
-    flightCompany Company @relation(name: "flightCompany", fields: [flightCompanyId], references: [companyId], onDelete: Cascade)
+    flightCompany Company @relation(name: "flightCompany", fields: [flightCompanyId], references: [companyId])
     flightIATACode String
     flightDepartureAirportId String @db.ObjectId
-    flightDepartureAirport Airport @relation(name: "flightDeparture", fields: [flightDepartureAirportId], references: [airportId], onDelete: Cascade)
+    flightDepartureAirport Airport @relation(name: "flightDeparture", fields: [flightDepartureAirportId], references: [airportId])
     flightArrivalAirportId String @db.ObjectId
-    flightArrivalAirport Airport @relation(name: "flightArrival", fields: [flightArrivalAirportId], references: [airportId], onDelete: Cascade)
+    flightArrivalAirport Airport @relation(name: "flightArrival", fields: [flightArrivalAirportId], references: [airportId])
     flightProjectedDeparture DateTime
     flightProjectedArrival DateTime
     flightRealDeparture DateTime?
@@ -145,18 +132,17 @@ model Flight {
     flightCreatedAt  DateTime @default(now())
     flightUpdatedAt DateTime @updatedAt
     flightStopovers Stopover[] @relation("stopoverFlight")
-    flightBookings Booking[] @relation("bookingFlight")
 }
 
 model Stopover {
     @@map("stopovers")
     stopoverId String @id @default(auto()) @map("_id") @db.ObjectId
     stopoverFlightId String @db.ObjectId
-    stopoverFlight Flight @relation(name: "stopoverFlight", fields: [stopoverFlightId], references: [flightId], onDelete: Cascade)
+    stopoverFlight Flight @relation(name: "stopoverFlight", fields: [stopoverFlightId], references: [flightId])
     stopoverAirportId String @db.ObjectId
-    stopoverAirport Airport @relation(name: "stopoverAirport", fields: [stopoverAirportId], references: [airportId], onDelete: Cascade)
+    stopoverAirport Airport @relation(name: "stopoverAirport", fields: [stopoverAirportId], references: [airportId])
     stopoverRank Int @default(1)
-    stopoverProjectedArrival DateTime
+    stoppoverProjectedArrival DateTime
     stopoverProjectedDeparture DateTime
     stopoverRealArrival DateTime?
     stopoverRealDeparture DateTime?
@@ -168,12 +154,123 @@ model Booking {
     @@map("bookings")
     bookingId String @id @default(auto()) @map("_id") @db.ObjectId
     bookingBuyerId String @db.ObjectId
-    bookingBuyer Buyer @relation(name: "bookingBuyer", fields: [bookingBuyerId], references: [buyerId], onDelete: Cascade)
+    bookingBuyer Buyer @relation(name: "bookingBuyer", fields: [bookingBuyerId], references: [buyerId])
     bookingPassengerId String @db.ObjectId
-    bookingPassenger Passenger @relation(name: "bookingPassenger", fields: [bookingPassengerId], references: [passengerId], onDelete: Cascade)
-    bookingFlightId String @db.ObjectId
-    bookingFlight Flight @relation(name: "bookingFlight", fields: [bookingFlightId], references: [flightId], onDelete: Cascade)
+    bookingPassenger Passenger @relation(name: "bookingPassenger", fields: [bookingPassengerId], references: [passengerId])
     bookingSeat String
     bookingCreatedAt  DateTime @default(now())
     bookingUpdatedAt DateTime @updatedAt
 }
+
+// File: tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+// File: package.json
+{
+  "name": "jeanceugniet-totalrecall-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.1.0",
+    "mongoose": "^8.8.0",
+    "next": "15.0.2",
+    "react": "19.0.0-rc-02c0e824-20241028",
+    "react-dom": "19.0.0-rc-02c0e824-20241028"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "esbuild": "^0.24.0",
+    "eslint": "^8",
+    "eslint-config-next": "15.0.2",
+    "postcss": "^8",
+    "prisma": "^6.1.0",
+    "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
+
+// File: docker-compose.yml
+#### TotalRecall ###
+services:
+  nextjs: #### NextJS et Prisma ###
+    image: node:18-alpine
+    container_name: nextjs
+    working_dir: /app
+    volumes:
+      - ./:/app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5555:5555"
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=development
+    depends_on:
+      - mongo
+    command: ["sh", "-c", "npx next dev & npx prisma studio", "npx prisma generate", "npm run dev"]
+
+  mongo:  #### MongoDB ###
+    image: mongo:5
+    restart: always
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db 
+      - ./mongo_backup:/data/ ## Pour sauvegarder les données dans le répertoire mongo_backup
+    command: ["--replSet rs0", "mongod", "--quiet"]
+
+volumes:
+  mongo-data:
+
+// File: next.config.ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+  cacheMaxMemorySize: 0
+};
+
+export default nextConfig;
+
+// File: .env
+DATABASE_URL=mongodb://localhost:27017/totalRecall
+AUTH_SECRET=/7iH7/YQ5TBZrHsLnuNpedrfXIPuZbuRvtLG99UyJGg=
