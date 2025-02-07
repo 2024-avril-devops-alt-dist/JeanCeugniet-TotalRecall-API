@@ -6,7 +6,7 @@ const collection = "airport";
 const response = "airports";
 const collectionId = "airportId"
 
-
+// Get all items
 export const GET = async () => {
     try {
         const data = await prisma[collection].findMany({
@@ -24,6 +24,7 @@ export const GET = async () => {
     }
 }
 
+// Create new item
 export const POST = async (req: NextRequest) => {
     try {
         // Extraire les données du corps de la requête
@@ -70,48 +71,4 @@ export const POST = async (req: NextRequest) => {
             { status: 500 }
         );
     }
-}
-
-// Route pour supprimer un aéroport
-export const DELETE = async (req: NextRequest ) => {
-    try {
-        const { airportId } = await req.json();
-        console.log(`airportId : ${airportId}`);
-
-        // Vérifier si l'aéroport existe dans la base de données
-        const airportExists = await prisma.airport.findUnique({
-            where: {
-                airportId,
-            },
-        });
-        console.log(`airportExists : ${airportExists}`);
-
-        if (!airportExists) {
-            return NextResponse.json(
-                { message: 'This airport does not exist' },
-                { status: 404 }
-            );
-        }
-
-        // Supprimer l'aéroport de la base de données
-        await prisma.airport.delete({
-            where: {
-                airportId,
-            },
-        });
-
-        // Retourner une réponse avec un statut 204 (No Content)
-        return NextResponse.json(
-            { status: 204 }
-        );
-
-    }
-    catch (error) {
-        // En cas d'erreur, renvoyer un statut 500 (Internal Server Error)
-        return NextResponse.json(
-            { message: 'Cound not delete the airport', error },
-            { status: 500 }
-        );
-    }
-
 }

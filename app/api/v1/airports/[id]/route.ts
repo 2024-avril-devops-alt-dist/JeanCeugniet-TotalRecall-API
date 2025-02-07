@@ -6,6 +6,7 @@ const collection = "airport";
 const response = "airport";
 const collectionId = "airportId"
 
+// Récupérer un item
 export const GET = async (req: NextRequest, { params }: { params: { id: string } }) => {
     const { id } = await params;
     try {
@@ -25,7 +26,7 @@ export const GET = async (req: NextRequest, { params }: { params: { id: string }
     }
 }
 
-// Route pour mettre à jour un aéroport
+// Mettre à jour un item
 export const PUT = async (req: NextRequest, { params }: { params: { id: string } }) => {
     const { id } = await params;
 
@@ -33,11 +34,11 @@ export const PUT = async (req: NextRequest, { params }: { params: { id: string }
         // Lire les données envoyées dans le corps de la requête
         const { airportIATACode, airportCityId, airportName } = await req.json();
 
-        // Vérifier si l'aéroport existe dans la base de données
-        const airportExists = await prisma[collection].findUnique({
+        // Vérifier si l'item existe dans la base de données
+        const itemExists = await prisma[collection].findUnique({
             where: { [collectionId]: id },
         });
-        if (!airportExists) {
+        if (!itemExists) {
             return NextResponse.json(
                 { message: 'This airport does not exist' },
                 { status: 404 }
@@ -58,13 +59,13 @@ export const PUT = async (req: NextRequest, { params }: { params: { id: string }
         if (airportCityId) updateData.airportCityId = airportCityId;
         if (airportName) updateData.airportName = airportName;
 
-        // Mettre à jour l'aéroport dans la base de données
+        // Mettre à jour l'item dans la base de données
         const updatedAirport = await prisma[collection].update({
             where: { [collectionId]: id },
             data: updateData,
         });
 
-        // Retourner l'aéroport mis à jour avec un statut 200 (OK)
+        // Retourner l'item mis à jour avec un statut 200 (OK)
         return NextResponse.json(updatedAirport, { status: 200 });
     }
     catch (error) {
@@ -76,4 +77,20 @@ export const PUT = async (req: NextRequest, { params }: { params: { id: string }
     }
 }
 
-
+// Supprimer un item
+export const DELETE = async (req: NextRequest, { params }: { params: { id: string } }) => {
+    const { id } = await params;
+    try {
+        const data = await prisma[collection].delete({
+            where: { [collectionId]: id },
+        });
+          
+        return NextResponse.json({ [response]: data ?? [] });
+    }
+    catch (error) {
+        return NextResponse.json(
+            { error: `Failed to fetch ${collection}` },
+            { status: 500 }
+        );
+    }
+}
