@@ -17,7 +17,7 @@ enum Role {
 model User {
     @@map("users")
     userId String @id @default(auto()) @map("_id") @db.ObjectId
-    userEmail String
+    userEmail String @unique
     userPasswordHash String
     userRole    Role
     userLastLogin DateTime?

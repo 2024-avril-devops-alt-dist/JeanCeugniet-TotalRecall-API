@@ -13,6 +13,7 @@
     "mongosh": "docker exec -it mongo sh"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.7.4",
     "@prisma/client": "^6.1.0",
     "bcrypt": "^5.1.1",
     "bcrypt-ts": "^5.0.3",
@@ -20,7 +21,8 @@
     "mongodb": "^6.12.0",
     "next": "^15.1.4",
     "react": "^18.2",
-    "react-dom": "^18.2"
+    "react-dom": "^18.2",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
